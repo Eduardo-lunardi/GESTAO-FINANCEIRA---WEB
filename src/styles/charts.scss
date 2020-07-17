@@ -1,0 +1,14 @@
+.transparency {
+    z-index: 0;
+}
+
+.cards {
+    font-size: 3rem;
+    font-weight: bold;
+}
+
+.titleCard {
+    @media (max-width: 1200px) {
+        font-size: 89%;
+    }
+}

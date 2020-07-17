@@ -1,15 +1,16 @@
 import React from "react";
 import { withRouter } from "react-router";
-import server from "../../services/api"
+import server from "../services/api"
 
-class cadastrarSocio extends React.Component {
+class LancarDespesas extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             form: {
-                nome: "",
-                senha: "",
-                email: "",
+                valor: "",
+                vencimento: "",
+                tipo: "",
+                fornecedor: ""
             },
             errors: {},
         };
@@ -158,4 +159,4 @@ class cadastrarSocio extends React.Component {
     }
 }
 
-export default withRouter(cadastrarSocio);
+export default withRouter(LancarDespesas);

@@ -3,7 +3,6 @@ import { login } from "../services/auth";
 import { withRouter } from "react-router";
 import { Link } from "react-router-dom";
 import server from "../services/api";
-import "../styles/login.scss"
 
 class Login extends React.Component {
   constructor(props) {
@@ -66,8 +65,8 @@ class Login extends React.Component {
             this.props.history.push("/");
           },
           (err) => {
-              this.setState({ erroBack: "Usuário ou senha inválidos" });
-            
+            this.setState({ erroBack: "Usuário ou senha inválidos" });
+
           }
 
         );

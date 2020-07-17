@@ -1,19 +1,81 @@
 import React from "react";
 import { withRouter } from "react-router";
-import server from "../services/api";
-import { Link } from 'react-router-dom'
+import ChartArea from "../components/charts/ChartArea";
+import ChartPie from "../components/charts/ChartPie";
+import server from "../services/api"
+import "../styles/charts.scss"
 
 class dash extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            categorias: [],
-            pedido: [],
-            erroBack: '',
-            roles: localStorage.getItem("roles")
+            msg: "",
+            socios: {
+                colors: ['#9b4a97'],
+                title: {
+                    text: "Adesões de sócios por mês",
+                },
+                chart: {
+                    toolbar: {
+                        show: false,
+                    },
+                },
+                xaxis: {
+                    categories: [],
+                }
+            },
+            sociosDados: [
+                {
+                    name: ["Sócios"],
+                    data: []
+                }
+            ],
+
+            //====================================================================
+
+            qr: {
+                colors: ["#ffcd00"],
+                title: {
+                    text: "Notas lidas por mês"
+                },
+                chart: {
+                    toolbar: {
+                        show: false,
+                    }
+                },
+                xaxis: {
+                    categories: []
+                }
+            },
+            qrDados: [
+                {
+                    name: ["Notas"],
+                    data: []
+                }
+            ],
+
+            //=================================================================
+
+            parceiros: {
+                title: {
+                    text: "Notas lidas por parceiros"
+                },
+                chart: {
+                    toolbar: {
+                        show: false,
+                    },
+                },
+                labels: []
+            },
+            parceirosDados: [],
+
+            sociosAtivos: "",
+            sociosInadimplentes: "",
+            totalDependentes: "",
+            mediaDepentes: ""
+
         }
         this.buscarDados = this.buscarDados.bind(this)
-        this.listItem = this.listItem.bind(this);
     }
 
     componentDidMount() {
@@ -21,112 +83,176 @@ class dash extends React.Component {
     }
 
     buscarDados() {
-        this.state.roles === "prestador" ?
-            server
-                .get(`pedido/${localStorage.getItem("id")}`)
-                .then(res => {
-                    let list = this.state.pedido
-                    list = list.concat(res.data)
-                    this.setState({ pedido: list })
-                }, err => {
-                    if (err.response.data.erro) {
-                        this.setState({ erroBack: err.response.data.erro })
+        server
+            .get("dash/assoc-mes")
+            .then(res => {
+                let mes;
+                let arrayTratado = []
+                for (let x in res.data) {
+                    switch (res.data[x]._id.mes) {
+                        case 1: mes = "Jan"; break;
+                        case 2: mes = "Fev"; break;
+                        case 3: mes = "Mar"; break;
+                        case 4: mes = "Abr"; break;
+                        case 5: mes = "Mai"; break;
+                        case 6: mes = "Jun"; break;
+                        case 7: mes = "Jul"; break;
+                        case 8: mes = "Ago"; break;
+                        case 9: mes = "Set"; break;
+                        case 10: mes = "Out"; break;
+                        case 11: mes = "Nov"; break;
+                        case 12: mes = "Dez"; break;
+                        default: break;
                     }
-                })
-            :
-            server
-                .get("categoria")
-                .then(res => {
-                    let list = this.state.categorias
-                    list = list.concat(res.data)
-                    this.setState({ categorias: list })
-                }, err => {
-                    if (err.response.data.erro) {
-                        this.setState({ erroBack: err.response.data.erro })
-                    }
+                    arrayTratado.push({ total: res.data[x].count, categorias: mes + " / " + res.data[x]._id.ano, mes: res.data[x]._id.mes, ano: res.data[x]._id.ano })
+                }
+
+                arrayTratado.sort(function (a, b) {
+                    return parseInt(`${a.ano}${a.mes}`) - parseInt(`${b.ano}${b.mes}`);
                 });
-    }
 
-    listItem() {
-        let dados = []
+                this.setState((oldState) => ({
+                    ...oldState,
+                    socios: {
+                        xaxis: {
+                            categories: arrayTratado.map(x => x.categorias)
+                        }
+                    },
+                    sociosDados: [{ data: arrayTratado.map(x => x.total) }]
+                }))
 
-        this.state.roles === "prestador" ?
-            this.state.pedido.forEach((cards) => {
-                dados.push(
+            }, err => {
+                this.setState({ msg: "Erro ao buscar dados" })
+            });
 
-                    <div key={cards._id} className={"col-lg-4 text-center mb-3"}>
-                        {cards.status != "recusado" ?
-                            <div
-                                className={"card p-5"}
-                            >
-                                <label><strong>Descrição:</strong> {cards.descricao}</label>
-                                <label><strong>Localização:</strong> {cards.localizacao}</label>
-                                <label><strong>Data Hora:</strong> {cards.datahora}</label>
-
-                                {cards.status === "analise" ?
-                                    <div>
-                                        <button onClick={() => this.mudarStatus(cards._id, "aceito")}>Aceitar</button>
-                                        <button onClick={() => this.mudarStatus(cards._id, "recusado")}>Recusar</button>
-                                    </div>
-                                    :
-                                    <div>
-                                        <label>Serviço aceito</label><br/>
-                                        <button onClick={() => this.mudarStatus(cards._id, "finalizado")}>Finalizar</button>
-                                    </div>
-                                }
-                            </div>
-                            : null}
-                    </div>
-                )
-            })
-            :
-            this.state.categorias.forEach((cards) => {
-                dados.push(
-                    <div key={cards._id} className={"col-lg-4 text-center mb-3"}>
-                        <div
-                            className={"card p-5"}
-                        >
-                            <Link
-                                to={`/pedido/servico/${cards.nome}`}
-                            >
-                                {cards.nome}
-                            </Link>
-                        </div>
-                    </div>
-                )
-            })
-
-        return dados
-    }
-
-    mudarStatus(_id, valor) {
 
         server
-            .patch(`pedido/${_id}`, { status: valor })
+            .get("dash/notas-mes")
             .then(res => {
-                // console.log(res);
-            }, err => {
-                if (err.response.data.erro) {
-                    this.setState({ erroBack: err.response.data.erro })
+                let arrayNotas = [];
+                let mes;
+                for (let x in res.data) {
+                    switch (res.data[x]._id.mes) {
+                        case 1: mes = "Jan"; break;
+                        case 2: mes = "Fev"; break;
+                        case 3: mes = "Mar"; break;
+                        case 4: mes = "Abr"; break;
+                        case 5: mes = "Mai"; break;
+                        case 6: mes = "Jun"; break;
+                        case 7: mes = "Jul"; break;
+                        case 8: mes = "Ago"; break;
+                        case 9: mes = "Set"; break;
+                        case 10: mes = "Out"; break;
+                        case 11: mes = "Nov"; break;
+                        case 12: mes = "Dez"; break;
+                        default: break;
+                    }
+                    arrayNotas.push({ total: res.data[x].count, categorias: mes + " / " + res.data[x]._id.ano, mes: res.data[x]._id.mes, ano: res.data[x]._id.ano })
                 }
+
+                arrayNotas.sort(function (a, b) {
+                    return parseInt(`${a.ano}${a.mes}`) - parseInt(`${b.ano}${b.mes}`);
+                });
+                this.setState((oldState) => ({
+                    ...oldState,
+                    qr: {
+                        xaxis: {
+                            categories: arrayNotas.map(x => x.categorias)
+                        }
+                    },
+                    qrDados: [{ data: arrayNotas.map(x => x.total) }]
+                }))
+
+            }, err => {
+                this.setState({ msg: "Erro ao buscar dados" })
+            });
+
+        server
+            .get("dash/total-status")
+            .then(res => {
+                this.setState((oldState) => ({
+                    ...oldState,
+                    sociosAtivos: res.data.ativos,
+                    totalDependentes: res.data.depts_ativos,
+                    mediaDepentes: parseFloat(res.data.depts_ativos / res.data.ativos).toFixed(2).replace(".", ","),
+                    sociosInadimplentes: res.data.inativos
+                }))
+            }, err => {
+                this.setState({ msg: "Erro ao buscar dados" })
+            });
+
+        server
+            .get("dash/notas-parceiro")
+            .then(res => {
+                let arrayNotasParceiros = []
+                for (let x in res.data) {
+                    arrayNotasParceiros.push({ total: res.data[x].count, labels: res.data[x]._id })
+                }
+
+                this.setState({
+                    parceirosDados: arrayNotasParceiros.map(x => x.total),
+                    parceiros: {
+                        labels: arrayNotasParceiros.map(x => x.labels)
+                    }
+                })
+            }, err => {
+                this.setState({ msg: "Erro ao buscar dados" })
             });
     }
 
     render() {
-        let cards = this.listItem()
         return (
-            <div className='mt-3'>
-                <div className={"row"}>
-                    {cards}
+            <>
+                <div className='row mt-3'>
+                    <div className='col-lg-3 col-sm-6 col-md-6 mt-3'>
+                        <div className='card p-4'>
+                            <strong className='titleCard'>Sócios ativos</strong>
+                            <label className='cards'>{this.state.sociosAtivos}</label>
+                        </div>
+                    </div>
+                    <div className='col-lg-3 col-sm-6 col-md-6 mt-3'>
+                        <div className='card p-4'>
+                            <strong className='titleCard'>Total dependentes</strong>
+                            <label className='cards'>{this.state.totalDependentes}</label>
+                        </div>
+                    </div>
+                    <div className='col-lg-3 col-sm-6 col-md-6 mt-3'>
+                        <div className='card p-4'>
+                            <strong className='titleCard'>Média dependentes</strong>
+                            <label className='cards'>{this.state.mediaDepentes}</label>
+                        </div>
+                    </div>
+                    <div className='col-lg-3 col-sm-6 col-md-6 mt-3'>
+                        <div className='card p-4'>
+                            <strong className='titleCard'>Sócios inadimplentes</strong>
+                            <label className='cards'>{this.state.sociosInadimplentes}</label>
+                        </div>
+                    </div>
                 </div>
-                {this.state.roles === "adm" ?
-                    <Link className="btn" to="cadastro/categoria" > Nova categoria </Link>
-                    :
-                    null
-                }
-            </div>
-        )
+                <div className='row pt-5 justify-content-lg-center'>
+                    <div className='col-lg-6 mt-2 transparency'>
+                        <ChartArea
+                            options={this.state.socios}
+                            series={this.state.sociosDados}
+                        />
+                    </div>
+
+                    <div className='col-lg-6 mt-2 transparency'>
+                        <ChartArea
+                            options={this.state.qr}
+                            series={this.state.qrDados}
+                        />
+                    </div>
+                    <div className='col-lg-6 mt-2 mb-3 transparency'>
+                        <ChartPie
+                            options={this.state.parceiros}
+                            series={this.state.parceirosDados}
+                        />
+                    </div>
+                </div>
+            </>
+        );
     }
 }
 
-export default withRouter(dash);
+export default withRouter(dash)
