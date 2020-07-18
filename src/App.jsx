@@ -14,6 +14,11 @@ const dash = loadable({
   loading: Loading
 });
 
+const lancarDespesa = loadable({
+  loader: () => import("./views/LancarDespesas"),
+  loading: Loading
+})
+
 export default class App extends React.Component {
 
   render() {
@@ -24,6 +29,7 @@ export default class App extends React.Component {
           <Switch>
             <Route exact path="/cadastrar/user" component={cadastrarUser}></Route>
             <Route exact path="/" component={dash}></Route>
+            <Route exact path="/lacar-despesas" component={dash}></Route>
           </Switch>
         </div>
       </div>
