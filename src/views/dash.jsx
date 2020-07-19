@@ -9,11 +9,13 @@ class dash extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            totalContas: "",
+            totalContasMes: "",
             msg: "",
-            socios: {
+            despesas: {
                 colors: ['#9b4a97'],
                 title: {
-                    text: "Adesões de sócios por mês",
+                    text: "Total de despesas por mês",
                 },
                 chart: {
                     toolbar: {
@@ -24,41 +26,16 @@ class dash extends React.Component {
                     categories: [],
                 }
             },
-            sociosDados: [
+            despesasDados: [
                 {
-                    name: ["Sócios"],
+                    name: ["Despesas"],
                     data: []
                 }
             ],
 
-            //====================================================================
-
-            qr: {
-                colors: ["#ffcd00"],
+            tipos: {
                 title: {
-                    text: "Notas lidas por mês"
-                },
-                chart: {
-                    toolbar: {
-                        show: false,
-                    }
-                },
-                xaxis: {
-                    categories: []
-                }
-            },
-            qrDados: [
-                {
-                    name: ["Notas"],
-                    data: []
-                }
-            ],
-
-            //=================================================================
-
-            parceiros: {
-                title: {
-                    text: "Notas lidas por parceiros"
+                    text: "Contas por tipo"
                 },
                 chart: {
                     toolbar: {
@@ -67,12 +44,21 @@ class dash extends React.Component {
                 },
                 labels: []
             },
-            parceirosDados: [],
+            tipoDados: [],
 
-            sociosAtivos: "",
-            sociosInadimplentes: "",
-            totalDependentes: "",
-            mediaDepentes: ""
+            fornecedor: {
+                title: {
+                    text: "Contas por fornecedor"
+                },
+                chart: {
+                    toolbar: {
+                        show: false,
+                    },
+                },
+                labels: []
+            },
+            fornecedorDados: [],
+
 
         }
         this.buscarDados = this.buscarDados.bind(this)
@@ -83,116 +69,101 @@ class dash extends React.Component {
     }
 
     buscarDados() {
+        // server
+        //     .get(`despesas/mes/${localStorage.getItem("id")}`)
+        //     .then(res => {
+        //         console.log(res);
+
+        //         let mes;
+        //         let arrayTratado = []
+        //         for (let x in res.data) {
+        //             switch (res.data[x]._id.mes) {
+        //                 case 1: mes = "Jan"; break;
+        //                 case 2: mes = "Fev"; break;
+        //                 case 3: mes = "Mar"; break;
+        //                 case 4: mes = "Abr"; break;
+        //                 case 5: mes = "Mai"; break;
+        //                 case 6: mes = "Jun"; break;
+        //                 case 7: mes = "Jul"; break;
+        //                 case 8: mes = "Ago"; break;
+        //                 case 9: mes = "Set"; break;
+        //                 case 10: mes = "Out"; break;
+        //                 case 11: mes = "Nov"; break;
+        //                 case 12: mes = "Dez"; break;
+        //                 default: break;
+        //             }
+        //             arrayTratado.push({ total: res.data[x].count, categorias: mes + " / " + res.data[x]._id.ano, mes: res.data[x]._id.mes, ano: res.data[x]._id.ano })
+        //         }
+
+        //         arrayTratado.sort(function (a, b) {
+        //             return parseInt(`${a.ano}${a.mes}`) - parseInt(`${b.ano}${b.mes}`);
+        //         });
+
+        //         this.setState((oldState) => ({
+        //             ...oldState,
+        //             despesas: {
+        //                 xaxis: {
+        //                     categories: arrayTratado.map(x => x.categorias)
+        //                 }
+        //             },
+        //             despesasDados: [{ data: arrayTratado.map(x => x.total) }]
+        //         }))
+
+        //     }, err => {
+        //         this.setState({ msg: "Erro ao buscar dados" })
+        //     });
+
+
         server
-            .get("dash/assoc-mes")
+            .get(`despesas/total/${localStorage.getItem("id")}`)
             .then(res => {
-                let mes;
-                let arrayTratado = []
-                for (let x in res.data) {
-                    switch (res.data[x]._id.mes) {
-                        case 1: mes = "Jan"; break;
-                        case 2: mes = "Fev"; break;
-                        case 3: mes = "Mar"; break;
-                        case 4: mes = "Abr"; break;
-                        case 5: mes = "Mai"; break;
-                        case 6: mes = "Jun"; break;
-                        case 7: mes = "Jul"; break;
-                        case 8: mes = "Ago"; break;
-                        case 9: mes = "Set"; break;
-                        case 10: mes = "Out"; break;
-                        case 11: mes = "Nov"; break;
-                        case 12: mes = "Dez"; break;
-                        default: break;
-                    }
-                    arrayTratado.push({ total: res.data[x].count, categorias: mes + " / " + res.data[x]._id.ano, mes: res.data[x]._id.mes, ano: res.data[x]._id.ano })
-                }
+                console.log(res.data);
 
-                arrayTratado.sort(function (a, b) {
-                    return parseInt(`${a.ano}${a.mes}`) - parseInt(`${b.ano}${b.mes}`);
-                });
-
-                this.setState((oldState) => ({
-                    ...oldState,
-                    socios: {
-                        xaxis: {
-                            categories: arrayTratado.map(x => x.categorias)
-                        }
-                    },
-                    sociosDados: [{ data: arrayTratado.map(x => x.total) }]
-                }))
-
+                this.setState({
+                    totalContas: res.data[0].count
+                })
             }, err => {
                 this.setState({ msg: "Erro ao buscar dados" })
             });
 
+        // server
+        //     .get(`despesas/atual/${localStorage.getItem("id")}`)
+        //     .then(res => {
+        //         console.log(res);
+        //     }, err => {
+        //         this.setState({ msg: "Erro ao buscar dados" })
+        //     });
 
         server
-            .get("dash/notas-mes")
+            .get(`despesas/tipo/${localStorage.getItem("id")}`)
             .then(res => {
-                let arrayNotas = [];
-                let mes;
+                let arrayContasTipos = []
                 for (let x in res.data) {
-                    switch (res.data[x]._id.mes) {
-                        case 1: mes = "Jan"; break;
-                        case 2: mes = "Fev"; break;
-                        case 3: mes = "Mar"; break;
-                        case 4: mes = "Abr"; break;
-                        case 5: mes = "Mai"; break;
-                        case 6: mes = "Jun"; break;
-                        case 7: mes = "Jul"; break;
-                        case 8: mes = "Ago"; break;
-                        case 9: mes = "Set"; break;
-                        case 10: mes = "Out"; break;
-                        case 11: mes = "Nov"; break;
-                        case 12: mes = "Dez"; break;
-                        default: break;
-                    }
-                    arrayNotas.push({ total: res.data[x].count, categorias: mes + " / " + res.data[x]._id.ano, mes: res.data[x]._id.mes, ano: res.data[x]._id.ano })
-                }
-
-                arrayNotas.sort(function (a, b) {
-                    return parseInt(`${a.ano}${a.mes}`) - parseInt(`${b.ano}${b.mes}`);
-                });
-                this.setState((oldState) => ({
-                    ...oldState,
-                    qr: {
-                        xaxis: {
-                            categories: arrayNotas.map(x => x.categorias)
-                        }
-                    },
-                    qrDados: [{ data: arrayNotas.map(x => x.total) }]
-                }))
-
-            }, err => {
-                this.setState({ msg: "Erro ao buscar dados" })
-            });
-
-        server
-            .get("dash/total-status")
-            .then(res => {
-                this.setState((oldState) => ({
-                    ...oldState,
-                    sociosAtivos: res.data.ativos,
-                    totalDependentes: res.data.depts_ativos,
-                    mediaDepentes: parseFloat(res.data.depts_ativos / res.data.ativos).toFixed(2).replace(".", ","),
-                    sociosInadimplentes: res.data.inativos
-                }))
-            }, err => {
-                this.setState({ msg: "Erro ao buscar dados" })
-            });
-
-        server
-            .get("dash/notas-parceiro")
-            .then(res => {
-                let arrayNotasParceiros = []
-                for (let x in res.data) {
-                    arrayNotasParceiros.push({ total: res.data[x].count, labels: res.data[x]._id })
+                    arrayContasTipos.push({ total: res.data[x].count, labels: res.data[x]._id })
                 }
 
                 this.setState({
-                    parceirosDados: arrayNotasParceiros.map(x => x.total),
-                    parceiros: {
-                        labels: arrayNotasParceiros.map(x => x.labels)
+                    tipoDados: arrayContasTipos.map(x => x.total),
+                    tipos: {
+                        labels: arrayContasTipos.map(x => x.labels)
+                    }
+                })
+            }, err => {
+                this.setState({ msg: "Erro ao buscar dados" })
+            });
+
+        server
+            .get(`despesas/fornecedor/${localStorage.getItem("id")}`)
+            .then(res => {
+                let arrayContasTipos = []
+                for (let x in res.data) {
+                    arrayContasTipos.push({ total: res.data[x].count, labels: res.data[x]._id })
+                }
+
+                this.setState({
+                    fornecedorDados: arrayContasTipos.map(x => x.total),
+                    fornecedor: {
+                        labels: arrayContasTipos.map(x => x.labels)
                     }
                 })
             }, err => {
@@ -206,47 +177,34 @@ class dash extends React.Component {
                 <div className='row mt-3'>
                     <div className='col-lg-3 col-sm-6 col-md-6 mt-3'>
                         <div className='card p-4'>
-                            <strong className='titleCard'>Sócios ativos</strong>
-                            <label className='cards'>{this.state.sociosAtivos}</label>
+                            <strong className='titleCard'>Contas a pagar</strong>
+                            <label className='cards'>{this.state.totalContas}</label>
                         </div>
                     </div>
-                    <div className='col-lg-3 col-sm-6 col-md-6 mt-3'>
+                    {/* <div className='col-lg-3 col-sm-6 col-md-6 mt-3'>
                         <div className='card p-4'>
-                            <strong className='titleCard'>Total dependentes</strong>
-                            <label className='cards'>{this.state.totalDependentes}</label>
+                            <strong className='titleCard'>Total contas do mês</strong>
+                            <label className='cards'>{this.state.totalContasMes}</label>
                         </div>
-                    </div>
-                    <div className='col-lg-3 col-sm-6 col-md-6 mt-3'>
-                        <div className='card p-4'>
-                            <strong className='titleCard'>Média dependentes</strong>
-                            <label className='cards'>{this.state.mediaDepentes}</label>
-                        </div>
-                    </div>
-                    <div className='col-lg-3 col-sm-6 col-md-6 mt-3'>
-                        <div className='card p-4'>
-                            <strong className='titleCard'>Sócios inadimplentes</strong>
-                            <label className='cards'>{this.state.sociosInadimplentes}</label>
-                        </div>
-                    </div>
+                    </div> */}
                 </div>
                 <div className='row pt-5 justify-content-lg-center'>
-                    <div className='col-lg-6 mt-2 transparency'>
+                    {/* <div className='col-lg-6 mt-2 transparency'>
                         <ChartArea
-                            options={this.state.socios}
-                            series={this.state.sociosDados}
+                            options={this.state.despesas}
+                            series={this.state.despesasDados}
                         />
-                    </div>
-
-                    <div className='col-lg-6 mt-2 transparency'>
-                        <ChartArea
-                            options={this.state.qr}
-                            series={this.state.qrDados}
+                    </div> */}
+                    <div className='col-lg-6 mt-2 mb-3 transparency'>
+                        <ChartPie
+                            options={this.state.tipos}
+                            series={this.state.tipoDados}
                         />
                     </div>
                     <div className='col-lg-6 mt-2 mb-3 transparency'>
                         <ChartPie
-                            options={this.state.parceiros}
-                            series={this.state.parceirosDados}
+                            options={this.state.fornecedor}
+                            series={this.state.fornecedorDados}
                         />
                     </div>
                 </div>

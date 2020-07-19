@@ -29,7 +29,7 @@ export default class App extends React.Component {
           <Switch>
             <Route exact path="/cadastrar/user" component={cadastrarUser}></Route>
             <Route exact path="/" component={dash}></Route>
-            <Route exact path="/lacar-despesas" component={dash}></Route>
+            <Route exact path="/lacar-despesas" component={lancarDespesa}></Route>
           </Switch>
         </div>
       </div>

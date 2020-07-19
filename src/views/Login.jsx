@@ -61,7 +61,7 @@ class Login extends React.Component {
         .post("/login", this.state.form)
         .then(
           (res) => {
-            login({ token: res.data.token, refreshToken: res.data.refreshToken, nome: res.data.usuario.nome, roles: res.data.usuario.roles, prest_id: res.data.usuario._id });
+            login({ token: res.data.token, refreshToken: res.data.refreshToken, nome: res.data.usuario.nome, roles: res.data.usuario.roles, _id: res.data.usuario._id });
             this.props.history.push("/");
           },
           (err) => {

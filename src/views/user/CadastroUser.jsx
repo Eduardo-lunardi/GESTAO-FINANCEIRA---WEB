@@ -22,11 +22,14 @@ class cadastrarSocio extends React.Component {
 
     cadastroUser(event) {
         event.preventDefault();
+        console.log("dados para enviar: ", this.state.form);
+
         server
-            .post("usuario", this.state.form, {
+            .post("usuario/cadastro", this.state.form, {
                 headers: { Authorization: "Bearer " + localStorage.getItem("token") }
             })
             .then(res => {
+                console.log(res);
                 this.setState({
                     form: {
                         nome: "",
@@ -36,9 +39,7 @@ class cadastrarSocio extends React.Component {
                 })
 
             }, err => {
-                if (err.response.data.erro) {
-                    this.setState({ erroBack: err.response.data.erro })
-                }
+                this.setState({ erroBack: err })
             });
     }
 

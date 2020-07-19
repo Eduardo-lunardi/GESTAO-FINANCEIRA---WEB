@@ -2,19 +2,9 @@ mini gestor de financas
 
 cadastro de user
 
-lancar despesas mensais(valor, vencimento, tipo, fornecedor) {flag para marcar se foi pago}
-
-exemplos de tipo: "agua, luz, alimentacao, entreterimento"
-
-({sem cadastro de tipos ou fornecedor, so cadastra a conta "tipo e fornecedor vem em um select"})
-(tb tipo e fornecedor usadas da ultimos cadastros como base)
-
 dash({
     grafico com total de despesas mensais dos ultimos 12 meses
-    grafico de contas por categoria
     grafico de tipo
     grafico de fornecedor
-
-    card com total de contas em aberto
     card com total de contas do mes
 })

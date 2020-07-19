@@ -11,7 +11,6 @@ class Menu extends React.Component {
     super(props);
     this.state = {
       nome: localStorage.getItem("nome"),
-      roles: localStorage.getItem("roles")
     }
     this.fazerLogout = this.fazerLogout.bind(this)
   }
@@ -24,32 +23,6 @@ class Menu extends React.Component {
   render() {
     return (
       <nav className="navbar navbar-expand-lg navbar-light main-nav justify-content-between ">
-        <ul className="align-items-center navbar-nav">
-          {this.state.roles === "adm" ?
-            <>
-              <li className="nav-item d-lg-block" href="#"><Link className="nav-link" to="/cadastro/prestador">Prestadores</Link></li>
-              <li className="nav-item d-lg-block" href="#"><Link className="nav-link" to="/cadastrar/user">User</Link></li>
-            </>
-            :
-            null
-          }
-          {this.state.roles === "user" ?
-            <>
-              <li className='nav-item d-lg-block'>
-                <Link className={"nav-link"} to="/pedidos">Pedidos</Link>
-              </li>
-            </>
-            :
-            null
-          }
-          {this.state.roles === "prestador" ?
-            <>
-              <li className="nav-item d-lg-block" href="#"></li>
-            </>
-            :
-            null
-          }
-        </ul>
         <ul className="align-items-center nav">
           <li className="nav-item d-lg-block" href="#">
             <div className="btn-group">
@@ -59,6 +32,7 @@ class Menu extends React.Component {
               </div>
               <div className="dropdown-menu text-center">
                 <Link className="dropdown-item" to="/">Home</Link>
+                <Link className="dropdown-item" to="/lacar-despesas">Lançar Despesas</Link>
                 <div className="dropdown-divider mr-4 ml-4"></div>
                 <a className="dropdown-item" href="/login" onClick={this.fazerLogout}>Fazer logout</a>
               </div>

@@ -1,6 +1,7 @@
 import React from "react";
 import { withRouter } from "react-router";
 import server from "../services/api"
+import TextInputMask from "react-masked-text"
 
 class LancarDespesas extends React.Component {
     constructor(props) {
@@ -10,42 +11,68 @@ class LancarDespesas extends React.Component {
                 valor: "",
                 vencimento: "",
                 tipo: "",
-                fornecedor: ""
+                fornecedor: "",
+                pago: ""
             },
             errors: {},
         };
-        this.cadastroUser = this.cadastroUser.bind(this);
+        this.cadastroDespesa = this.cadastroDespesa.bind(this);
         this.handleStates = this.handleStates.bind(this);
+        this.handleSelects = this.handleSelects.bind(this)
         this.validacaoPadrao = this.validacaoPadrao.bind(this);
-        this.validarEmail = this.validarEmail.bind(this);
         this.verificarInputs = this.verificarInputs.bind(this);
+
+        this.campoDataVencimento = React.createRef();
     }
 
-    cadastroUser(event) {
+    cadastroDespesa(event) {
         event.preventDefault();
+
+        let val = this.state.form.valor.match(/[\d\.\,]+/);
+        val = Number(val ? val[0].replace(/\./g, '').replace(',', '.') : 0);
+
+        let list = {
+            valor: val,
+            vencimento: this.state.form.vencimento,
+            tipo: this.state.form.tipo,
+            fornecedor: this.state.form.fornecedor,
+            pago: this.state.form.pago,
+            idUser: localStorage.getItem("id")
+        }
+
         server
-            .post("usuario", this.state.form, {
+            .post("despesas/cadastro", list, {
                 headers: { Authorization: "Bearer " + localStorage.getItem("token") }
             })
             .then(res => {
                 this.setState({
                     form: {
-                        nome: "",
-                        senha: "",
-                        email: "",
+                        valor: "",
+                        vencimento: "",
+                        tipo: "",
+                        fornecedor: "",
+                        pago: ""
                     }
                 })
-
             }, err => {
-                if (err.response.data.erro) {
-                    this.setState({ erroBack: err.response.data.erro })
-                }
+                this.setState({ erroBack: err })
             });
     }
 
-    handleStates(obj, value) {
-        let tipo = obj.target ? obj.target.name : obj.props.name;
-        let valor = obj.target ? obj.target.value : value;
+    handleStates(obj, name) {
+        let tipo = name;
+        let valor = obj;
+        this.setState((oldState) => ({
+            form: {
+                ...oldState.form,
+                [tipo]: valor,
+            },
+        }));
+    }
+
+    handleSelects(obj, name) {
+        let tipo = name;
+        let valor = obj.target.value
         this.setState((oldState) => ({
             form: {
                 ...oldState.form,
@@ -56,25 +83,12 @@ class LancarDespesas extends React.Component {
 
     validacaoPadrao(campo, length = 1) {
         let erros = this.state.errors;
-
         if (this.state.form[campo].length >= length) {
-            delete erros[campo];
+            delete erros[campo]
         } else {
-            erros[campo] = true;
+            erros[campo] = true
         }
 
-        this.setState({
-            errors: erros,
-        });
-    }
-
-    validarEmail() {
-        let erros = this.state.errors;
-        if (/^\w+([.-]?\w+)@\w+([.-]?\w+)(\.\w+)+$/.test(this.state.form.email)) {
-            erros.email = false;
-        } else {
-            erros.email = true;
-        }
         this.setState({
             errors: erros,
         });
@@ -95,62 +109,106 @@ class LancarDespesas extends React.Component {
         return (
             <div className="container">
                 <div className="col-lg-12">
-                    <form onSubmit={this.cadastroUser}>
+                    <form onSubmit={this.cadastroDespesa}>
                         <div className="form-row">
                             <div className="form-group col-lg-8">
-                                {/* nome */}
-                                <input
-                                    type="text"
+                                {/* Valor */}
+                                <TextInputMask
+                                    kind={'money'}
                                     className={
                                         "form-control custom-input" +
-                                        (this.state.errors.nome ? " is-invalid" : " ")
+                                        (this.state.errors.valor ? " is-invalid" : " ")
                                     }
-                                    placeholder="Nome do user"
-                                    defaultValue={this.state.form.nome}
-                                    name="nome"
-                                    onChange={(str) => this.handleStates(str, null)}
-                                    onBlur={this.validarNome}
+                                    placeholder="Valor da despesa"
+                                    value={this.state.form.valor}
+                                    name="valor"
+                                    onChangeText={(str) => this.handleStates(str, "valor")}
+                                    onBlur={() => this.validacaoPadrao("valor", 1, null)}
                                 />
-                                <div className="invalid-feedback">Nome e Sobrenome</div>
+                                <div className="invalid-feedback">Campo de valor obrigatório</div>
                             </div>
                             <div className="form-group col-lg-4">
-                                <input
-                                    type="password"
+                                {/* data vencimento */}
+                                <TextInputMask
+                                    kind="datetime"
+                                    type={"datetime"}
+                                    options={{
+                                        format: 'DD/MM/YYYY'
+                                    }}
+                                    value={this.state.form.vencimento}
+                                    name="vencimento"
+                                    onChangeText={(str) => this.handleStates(str, "vencimento")}
                                     className={
                                         "form-control custom-input" +
-                                        (this.state.errors.senha ? " is-invalid" : " ")
+                                        (this.state.errors.vencimento ? " is-invalid" : " ")
                                     }
-                                    placeholder="Senha"
-                                    defaultValue={this.state.form.senha}
-                                    name="senha"
-                                    onChange={(str) => this.handleStates(str, null)}
-                                    onBlur={() => this.validacaoPadrao('senha')}
+                                    placeholder="Data vencimento"
+                                    onBlur={() => this.validacaoPadrao('vencimento', 10, null)}
                                 />
-                                <div className="invalid-feedback">Campo obrigatório!</div>
+                                <div className="invalid-feedback">Data de vencimento obrigatório!</div>
                             </div>
                         </div>
                         <div className="form-row">
                             <div className="form-group col-lg-5">
-                                {/* email */}
-                                <input
-                                    type="text"
-                                    className={
-                                        "form-control custom-input" +
-                                        (this.state.errors.email ? " is-invalid" : " ")
-                                    }
-                                    placeholder="Email"
-                                    defaultValue={this.state.form.email}
-                                    name="email"
-                                    onChange={(str) => this.handleStates(str, null)}
-                                    onBlur={this.validarEmail}
-                                />
+                                {/* tipo */}
+                                <select
+                                    className={'custom-select' + (this.state.errors.tipo ? " is-invalid" : " ")}
+                                    name="tipo"
+                                    value={this.state.form.tipo}
+                                    onChange={(str) => this.handleSelects(str, "tipo")}
+                                    onBlur={() => this.validacaoPadrao("tipo")}
+                                >
+                                    <option className='d-none' value={undefined} >Tipos</option>
+                                    <option value={"Água"} >Água</option>
+                                    <option value={"Luz"} >Luz</option>
+                                    <option value={"Alimentação"} >Alimentação</option>
+                                    <option value={"Entreterimento"} >Entreterimento</option>
+                                </select>
                                 <div className="invalid-feedback">
-                                    Verifique seu email.
+                                    Selecione o tipo de despesa!
                                 </div>
                             </div>
-                            <div className={"form-group text-center mt-5"}>
-                                <button className='btn-custom-primary' onClick={this.cadastroUser} disabled={btnDisabled} >Concluir Cadastro</button>
+                            <div className="form-group col-lg-5">
+                                {/* tipo */}
+                                <select
+                                    className={'custom-select' + (this.state.errors.fornecedor ? " is-invalid" : " ")}
+                                    name="fornecedor"
+                                    value={this.state.form.fornecedor}
+                                    onChange={(str) => this.handleSelects(str, "fornecedor")}
+                                    onBlur={() => this.validacaoPadrao("fornecedor")}
+                                >
+                                    <option className='d-none' value={undefined} >Fornecedor</option>
+                                    <option value={"Corsan"} >Corsan</option>
+                                    <option value={"RGA"} >RGA</option>
+                                    <option value={"CooperLuz"} >CooperLuz</option>
+                                    <option value={"Show Time"} >Show Time</option>
+                                </select>
+                                <div className="invalid-feedback">
+                                    Selecione o fornecedor!
+                                </div>
                             </div>
+                        </div>
+                        <div className="form-group col-lg-5">
+                            {/* pago */}
+                            <select
+                                className={'custom-select' + (this.state.errors.pago ? " is-invalid" : " ")}
+                                name="pago'"
+                                value={this.state.form.pago}
+                                onChange={(str) => this.handleSelects(str, "pago")}
+                                onBlur={() => this.validacaoPadrao("pago")}
+                            >
+                                <option className='d-none' value={undefined} >Pago?</option>
+                                <option value={"Sim"} >Sim</option>
+                                <option value={"Não"} >Não</option>
+                            </select>
+                            <div className="invalid-feedback">
+                                Informe o status da despesa!
+                            </div>
+                        </div>
+                        <div className={"form-group text-center mt-5"}>
+                            <button className='btn-custom-primary' onClick={this.cadastroDespesa}
+                            // disabled={btnDisabled} 
+                            >Concluir Cadastro</button>
                         </div>
                     </form>
                 </div>
